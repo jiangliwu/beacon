@@ -1,0 +1,96 @@
+//ICC-AVR application builder : 2005-09-30 오후 10:33:53
+// Target : M128
+// Crystal: 16.000Mhz
+
+#include <iom128v.h>
+#include <macros.h>
+
+void port_init(void)
+{
+ PORTA = 0x00;
+ DDRA  = 0x00;
+ PORTB = 0x00;
+ DDRB  = 0x00;
+ PORTC = 0x00; //m103 output only
+ DDRC  = 0x00;
+ PORTD = 0x00;
+ DDRD  = 0x00;
+ PORTE = 0x00;
+ DDRE  = 0x00;
+ PORTF = 0x00;
+ DDRF  = 0x00;
+ PORTG = 0x00;
+ DDRG  = 0x0f;
+}
+
+//UART0 initialize
+// desired baud rate: 9600
+// actual: baud rate:9615 (0.2%)
+// char size: 8 bit
+// parity: Disabled
+void uart0_init(void)
+{
+ UCSR0B = 0x00; //disable while setting baud rate
+ UCSR0A = 0x00;
+ UCSR0C = 0x06;
+ UBRR0L = 0x67; //set baud rate lo
+ UBRR0H = 0x00; //set baud rate hi
+ UCSR0B = 0x08;
+}
+
+unsigned char port_out;
+
+//call this routine to initialize all peripherals
+void init_devices(void)
+{
+ //stop errant interrupts until set up
+ CLI(); //disable all interrupts
+ XDIV  = 0x00; //xtal divider
+ XMCRA = 0x00; //external memory
+ port_init();
+ uart0_init();
+
+ MCUCR = 0x00;
+ EICRA = 0x00; //extended ext ints
+ EICRB = 0x00; //extended ext ints
+ EIMSK = 0x00;
+ TIMSK = 0x00; //timer interrupt sources
+ ETIMSK = 0x00; //extended timer interrupt sources
+ SEI(); //re-enable interrupts
+ //all peripherals are now initialized
+}
+
+
+void delay(int n)
+{
+	volatile int i,j;
+	for(i=1;i<n;i++)
+	{
+    	for(j=1;j<600;j++);
+	}
+}
+
+void main(void)
+{
+	unsigned int temp, i;
+    init_devices();    
+
+    printf("\n\rDPORT 4, 5 Switch test....\n\r");
+    delay(600);
+    
+	while(1){
+		if((PING & 0x04)){
+            printf("일\n\r");
+            while((PIND & 0x10));
+			PORTG = 0x04;
+        }
+		if((PING & 0x08)){
+            printf("이\n\r");
+            while((PIND & 0x20));
+			PORTG = 0x08;
+        }
+        delay(10);
+    }
+}
+
+
